@@ -1,0 +1,12 @@
+/* Production — inherits .mrd-scope tokens (§7). */
+.prod-primary { min-height: var(--mrd-touch-min, 44px); padding: 0 var(--mrd-space-3, 12px); border: none; border-radius: var(--mrd-radius-sm, 3px); background: var(--interactive-accent); color: var(--text-on-accent); cursor: pointer; font-family: var(--font-monospace); font-size: var(--mrd-fs-xs, 11px); text-transform: uppercase; letter-spacing: 0.08em; }
+.prod-muted { color: var(--text-muted); font-family: var(--font-monospace); font-size: var(--mrd-fs-xs, 11px); }
+.prod-shoot, .prod-gear { display: flex; flex-direction: column; gap: var(--mrd-space-2, 8px); }
+.prod-board { overflow: auto; }
+.prod-board-cols { display: flex; gap: var(--mrd-space-3, 12px); align-items: flex-start; padding: var(--mrd-space-3, 12px); min-width: max-content; }
+.prod-col { min-width: 200px; max-width: 240px; display: flex; flex-direction: column; gap: var(--mrd-space-2, 8px); }
+.prod-col-head { font-family: var(--font-monospace); font-size: var(--mrd-fs-xs, 11px); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); border-bottom: 1px solid var(--background-modifier-border); padding-bottom: var(--mrd-space-1, 4px); }
+.prod-card { border: 1px solid var(--background-modifier-border); border-radius: var(--mrd-radius-md, 5px); padding: var(--mrd-space-2, 8px); display: flex; flex-direction: column; gap: var(--mrd-space-1, 4px); background: var(--background-secondary); }
+.prod-card-title { color: var(--text-normal); cursor: pointer; }
+.prod-card-amount { font-family: var(--font-monospace); font-size: var(--mrd-fs-xs, 11px); color: var(--text-muted); }
+.prod-advance { align-self: flex-start; min-height: 28px; background: transparent; border: 1px solid var(--background-modifier-border); border-radius: var(--mrd-radius-sm, 3px); color: var(--text-muted); cursor: pointer; font-family: var(--font-monospace); font-size: var(--mrd-fs-xs, 11px); }
