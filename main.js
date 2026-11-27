@@ -13,9 +13,9 @@ var __export = (target, all) => {
 };
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+    for (let key2 of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key2) && key2 !== except)
+        __defProp(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc(from, key2)) || desc.enumerable });
   }
   return to;
 };
@@ -27,7 +27,7 @@ __export(main_exports, {
   default: () => ProductionPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian7 = require("obsidian");
+var import_obsidian8 = require("obsidian");
 
 // ../../packages/core/dist/settings/framework.js
 function mergeSettings(defaults, loaded) {
@@ -140,15 +140,61 @@ function scopeEl(el, opts = {}) {
     el.classList.add(cls("skin", "accent"));
 }
 
-// src/settings.ts
+// ../../packages/ui/dist/startup.js
 var import_obsidian3 = require("obsidian");
+var DASHBOARD_PLUGIN_IDS = ["meridian-dash", "daily-dash"];
+function dashboardInstalled(app) {
+  var _a;
+  const enabled = (_a = app.plugins) === null || _a === void 0 ? void 0 : _a.enabledPlugins;
+  return DASHBOARD_PLUGIN_IDS.some((id) => {
+    var _a2;
+    return (_a2 = enabled === null || enabled === void 0 ? void 0 : enabled.has) === null || _a2 === void 0 ? void 0 : _a2.call(enabled, id);
+  });
+}
+var key = (pluginId) => `${pluginId}:open-on-startup`;
+function opensOnStartup(app, pluginId) {
+  try {
+    return app.loadLocalStorage(key(pluginId)) === true;
+  } catch (_a) {
+    return false;
+  }
+}
+function startupSetting(container, app, pluginId, label) {
+  if (dashboardInstalled(app))
+    return;
+  new import_obsidian3.Setting(container).setName(`Open ${label} when Obsidian starts`).setDesc("On this device. Hidden while a dashboard (MERIDIAN Dash or Daily Dashboard) is installed, since that opens first.").addToggle((t) => t.setValue(opensOnStartup(app, pluginId)).onChange((v) => {
+    try {
+      app.saveLocalStorage(key(pluginId), v ? true : null);
+    } catch (_a) {
+    }
+  }));
+}
+async function openViewOnStartup(app, pluginId, viewType) {
+  var _a, _b;
+  if (dashboardInstalled(app) || !opensOnStartup(app, pluginId))
+    return;
+  const ws = app.workspace;
+  const existing = ws.getLeavesOfType(viewType)[0];
+  if (existing) {
+    ws.revealLeaf(existing);
+    return;
+  }
+  const active = ws.getMostRecentLeaf();
+  const empty = active && ((_b = (_a = active.view) === null || _a === void 0 ? void 0 : _a.getViewType) === null || _b === void 0 ? void 0 : _b.call(_a)) === "empty";
+  const leaf = empty ? active : ws.getLeaf("tab");
+  await leaf.setViewState({ type: viewType, active: true });
+  ws.revealLeaf(leaf);
+}
+
+// src/settings.ts
+var import_obsidian4 = require("obsidian");
 var DEFAULT_SETTINGS = {
   root: "Work/Production",
   gearNote: "Work/Production/Gear.md",
   currency: "$",
   taxHundredthPct: 0
 };
-var ProductionSettingTab = class extends import_obsidian3.PluginSettingTab {
+var ProductionSettingTab = class extends import_obsidian4.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -156,26 +202,27 @@ var ProductionSettingTab = class extends import_obsidian3.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
+    startupSetting(containerEl, this.app, "production", "Production");
     const s = settingsSection(containerEl, "Production");
-    new import_obsidian3.Setting(s).setName("Root folder").addText(
+    new import_obsidian4.Setting(s).setName("Root folder").addText(
       (t) => t.setValue(this.plugin.settings.root).onChange(async (v) => {
         this.plugin.settings.root = v.trim() || DEFAULT_SETTINGS.root;
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian3.Setting(s).setName("Gear inventory note").setDesc("A note whose checklist items are the gear pool.").addText(
+    new import_obsidian4.Setting(s).setName("Gear inventory note").setDesc("A note whose checklist items are the gear pool.").addText(
       (t) => t.setValue(this.plugin.settings.gearNote).onChange(async (v) => {
         this.plugin.settings.gearNote = v.trim();
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian3.Setting(s).setName("Currency symbol").addText(
+    new import_obsidian4.Setting(s).setName("Currency symbol").addText(
       (t) => t.setValue(this.plugin.settings.currency).onChange(async (v) => {
         this.plugin.settings.currency = v.trim() || "$";
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian3.Setting(s).setName("Tax rate (%)").setDesc("Applied to estimates/invoices. Stored as an integer of hundredths.").addText(
+    new import_obsidian4.Setting(s).setName("Tax rate (%)").setDesc("Applied to estimates/invoices. Stored as an integer of hundredths.").addText(
       (t) => t.setValue((this.plugin.settings.taxHundredthPct / 100).toString()).onChange(async (v) => {
         const pct = Number(v) || 0;
         this.plugin.settings.taxHundredthPct = Math.round(pct * 100);
@@ -186,7 +233,7 @@ var ProductionSettingTab = class extends import_obsidian3.PluginSettingTab {
 };
 
 // src/entities.ts
-var import_obsidian4 = require("obsidian");
+var import_obsidian5 = require("obsidian");
 var ENTITY_KINDS = ["client", "project", "deliverable", "shoot"];
 var DELIVERABLE_STATUSES = [
   "quoted",
@@ -206,7 +253,7 @@ function initialStatus(kind) {
   return kind === "deliverable" ? "quoted" : kind === "shoot" ? "planned" : "active";
 }
 function entityNote(input) {
-  const today = (0, import_obsidian4.moment)().format("YYYY-MM-DD");
+  const today = (0, import_obsidian5.moment)().format("YYYY-MM-DD");
   const kind = input.kind;
   const prod = [];
   const parentKey = kind === "project" ? "client" : kind === "deliverable" ? "project" : kind === "shoot" ? "project" : null;
@@ -260,7 +307,7 @@ var TEMPLATES = {
 \`\`\`
 
 ## Status log
-- ${(0, import_obsidian4.moment)().format("YYYY-MM-DD")} \u2014 quoted
+- ${(0, import_obsidian5.moment)().format("YYYY-MM-DD")} \u2014 quoted
 `,
   shoot: (i) => `# ${i.title}
 
@@ -283,7 +330,7 @@ function folderFor(root, kind) {
 }
 
 // src/board.ts
-var import_obsidian5 = require("obsidian");
+var import_obsidian6 = require("obsidian");
 
 // src/money.ts
 function parseCents(input) {
@@ -320,7 +367,7 @@ function invoiceTotal(sub, tax, discount = 0) {
 
 // src/board.ts
 var VIEW_TYPE_BOARD = "production-board";
-var DeliverableBoardView = class extends import_obsidian5.ItemView {
+var DeliverableBoardView = class extends import_obsidian6.ItemView {
   constructor(leaf, plugin) {
     super(leaf);
     this.plugin = plugin;
@@ -344,7 +391,7 @@ var DeliverableBoardView = class extends import_obsidian5.ItemView {
       const cache = this.app.metadataCache.getFileCache(f);
       if (!(cache == null ? void 0 : cache.frontmatter)) return false;
       if (cache.frontmatter.type === "deliverable") return true;
-      return ((_a = (0, import_obsidian5.getAllTags)(cache)) != null ? _a : []).includes("#deliverable");
+      return ((_a = (0, import_obsidian6.getAllTags)(cache)) != null ? _a : []).includes("#deliverable");
     });
   }
   render() {
@@ -392,7 +439,7 @@ var DeliverableBoardView = class extends import_obsidian5.ItemView {
 };
 
 // src/shoot.ts
-var import_obsidian6 = require("obsidian");
+var import_obsidian7 = require("obsidian");
 var ShootPlannerModal = class extends BottomSheetModal {
   constructor(app, file, gearNotePath) {
     super(app);
@@ -417,7 +464,7 @@ var ShootPlannerModal = class extends BottomSheetModal {
   }
   async loadGear() {
     const f = this.app.vault.getAbstractFileByPath(this.gearNotePath);
-    if (!(f instanceof import_obsidian6.TFile)) return [];
+    if (!(f instanceof import_obsidian7.TFile)) return [];
     const text = await this.app.vault.cachedRead(f);
     const items = [];
     for (const line of text.split("\n")) {
@@ -430,14 +477,14 @@ var ShootPlannerModal = class extends BottomSheetModal {
     scopeEl(root);
     root.addClass("prod-shoot");
     this.titleEl.setText("Shoot planner");
-    new import_obsidian6.Setting(root).setName("Date").addText((t) => {
+    new import_obsidian7.Setting(root).setName("Date").addText((t) => {
       t.inputEl.type = "date";
       t.setValue(this.date).onChange((v) => this.date = v);
     });
-    new import_obsidian6.Setting(root).setName("Location").addText(
+    new import_obsidian7.Setting(root).setName("Location").addText(
       (t) => t.setValue(this.location).onChange((v) => this.location = v)
     );
-    new import_obsidian6.Setting(root).setName("Call time").addText((t) => {
+    new import_obsidian7.Setting(root).setName("Call time").addText((t) => {
       t.inputEl.type = "time";
       t.setValue(this.callTime).onChange((v) => this.callTime = v);
     });
@@ -447,7 +494,7 @@ var ShootPlannerModal = class extends BottomSheetModal {
       gearWrap.createDiv({ cls: "prod-muted", text: "No gear inventory note found \u2014 set its path in settings." });
     }
     for (const g of this.gearPool) {
-      new import_obsidian6.Setting(gearWrap).setName(g).addToggle(
+      new import_obsidian7.Setting(gearWrap).setName(g).addToggle(
         (tg) => tg.setValue(this.selected.has(g)).onChange((v) => v ? this.selected.add(g) : this.selected.delete(g))
       );
     }
@@ -563,7 +610,7 @@ views:
 `;
 
 // src/main.ts
-var ProductionPlugin = class extends import_obsidian7.Plugin {
+var ProductionPlugin = class extends import_obsidian8.Plugin {
   constructor() {
     super(...arguments);
     this.settings = DEFAULT_SETTINGS;
@@ -573,6 +620,7 @@ var ProductionPlugin = class extends import_obsidian7.Plugin {
     applyUiStyles(this);
     this.addSettingTab(new ProductionSettingTab(this.app, this));
     this.registerView(VIEW_TYPE_BOARD, (leaf) => new DeliverableBoardView(leaf, this));
+    this.app.workspace.onLayoutReady(() => void openViewOnStartup(this.app, "production", VIEW_TYPE_BOARD));
     this.addRibbonIcon("layout-grid", "Deliverable board", () => void this.openBoard());
     for (const kind of ENTITY_KINDS) {
       this.addCommand({ id: `new-${kind}`, name: `New ${kind}`, callback: () => this.newEntity(kind) });
@@ -601,16 +649,16 @@ var ProductionPlugin = class extends import_obsidian7.Plugin {
     this.registerMarkdownCodeBlockProcessor("production-invoice", (src, el, ctx) => {
       var _a;
       const file = this.app.vault.getAbstractFileByPath(ctx.sourcePath);
-      const fm = file instanceof import_obsidian7.TFile ? (_a = this.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter : void 0;
+      const fm = file instanceof import_obsidian8.TFile ? (_a = this.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter : void 0;
       const kind = /invoice/i.test(src) ? "invoice" : "estimate";
       const inv = invoiceFromFrontmatter(fm, {
-        title: file instanceof import_obsidian7.TFile ? file.basename : "",
+        title: file instanceof import_obsidian8.TFile ? file.basename : "",
         currency: this.settings.currency,
         taxHundredthPct: this.settings.taxHundredthPct,
         kind,
-        date: (0, import_obsidian7.moment)().format("YYYY-MM-DD")
+        date: (0, import_obsidian8.moment)().format("YYYY-MM-DD")
       });
-      void import_obsidian7.MarkdownRenderer.render(this.app, renderInvoiceMarkdown(inv), el, ctx.sourcePath, this);
+      void import_obsidian8.MarkdownRenderer.render(this.app, renderInvoiceMarkdown(inv), el, ctx.sourcePath, this);
     });
     this.app.workspace.onLayoutReady(() => void this.ensureBase());
   }
@@ -628,7 +676,7 @@ var ProductionPlugin = class extends import_obsidian7.Plugin {
     return ((_b = (_a = this.app.metadataCache.getFileCache(f)) == null ? void 0 : _a.frontmatter) == null ? void 0 : _b.type) === "shoot" ? f : null;
   }
   async ensureFolder(path) {
-    const p = (0, import_obsidian7.normalizePath)(path);
+    const p = (0, import_obsidian8.normalizePath)(path);
     if (p && !this.app.vault.getAbstractFileByPath(p)) await this.app.vault.createFolder(p).catch(() => {
     });
   }
@@ -641,9 +689,9 @@ var ProductionPlugin = class extends import_obsidian7.Plugin {
       const folder = folderFor(this.settings.root, kind);
       await this.ensureFolder(folder);
       const safe = title.replace(/[\\/:*?"<>|#^[\]]/g, "-").trim() || kind;
-      let path = (0, import_obsidian7.normalizePath)(`${folder}/${safe}.md`);
+      let path = (0, import_obsidian8.normalizePath)(`${folder}/${safe}.md`);
       let n = 2;
-      while (this.app.vault.getAbstractFileByPath(path)) path = (0, import_obsidian7.normalizePath)(`${folder}/${safe} ${n++}.md`);
+      while (this.app.vault.getAbstractFileByPath(path)) path = (0, import_obsidian8.normalizePath)(`${folder}/${safe} ${n++}.md`);
       const file = await this.app.vault.create(path, entityNote({ kind, title, parent }));
       await this.app.workspace.getLeaf(false).openFile(file);
     }).open();
@@ -662,11 +710,11 @@ var ProductionPlugin = class extends import_obsidian7.Plugin {
         currency: this.settings.currency,
         taxHundredthPct: this.settings.taxHundredthPct,
         kind,
-        date: (0, import_obsidian7.moment)().format("YYYY-MM-DD")
+        date: (0, import_obsidian8.moment)().format("YYYY-MM-DD")
       });
       const folder = `${this.settings.root}/Invoices`;
       await this.ensureFolder(folder);
-      const path = (0, import_obsidian7.normalizePath)(`${folder}/${f.basename} \u2014 ${kind}.md`);
+      const path = (0, import_obsidian8.normalizePath)(`${folder}/${f.basename} \u2014 ${kind}.md`);
       const body = `---
 type: ${kind}
 status: draft
@@ -678,15 +726,15 @@ tags: [production, ${kind}]
 ${renderInvoiceMarkdown(inv)}
 `;
       const existing = this.app.vault.getAbstractFileByPath(path);
-      const out = existing instanceof import_obsidian7.TFile ? (await this.app.vault.modify(existing, body), existing) : await this.app.vault.create(path, body);
+      const out = existing instanceof import_obsidian8.TFile ? (await this.app.vault.modify(existing, body), existing) : await this.app.vault.create(path, body);
       await this.app.workspace.getLeaf(false).openFile(out);
-      new import_obsidian7.Notice(`${kind[0].toUpperCase()}${kind.slice(1)} generated.`);
+      new import_obsidian8.Notice(`${kind[0].toUpperCase()}${kind.slice(1)} generated.`);
     })();
     return true;
   }
   async ensureBase() {
     await this.ensureFolder(this.settings.root);
-    const path = (0, import_obsidian7.normalizePath)(`${this.settings.root}/Production.base`);
+    const path = (0, import_obsidian8.normalizePath)(`${this.settings.root}/Production.base`);
     if (!this.app.vault.getAbstractFileByPath(path)) {
       await this.app.vault.create(path, PRODUCTION_BASE).catch(() => {
       });
@@ -705,7 +753,7 @@ var TitleModal = class extends BottomSheetModal {
     scopeEl(root);
     this.titleEl.setText(this.heading);
     if (this.parent) root.createDiv({ cls: "prod-muted", text: `Parent: ${this.parent}` });
-    new import_obsidian7.Setting(root).setName("Title").addText((t) => {
+    new import_obsidian8.Setting(root).setName("Title").addText((t) => {
       t.onChange((v) => this.value = v);
       window.setTimeout(() => t.inputEl.focus(), 0);
       t.inputEl.addEventListener("keydown", (e) => {

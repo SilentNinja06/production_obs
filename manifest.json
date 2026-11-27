@@ -1,7 +1,7 @@
 {
 	"id": "production",
 	"name": "Production",
-	"version": "0.1.1",
+	"version": "0.2.0",
 	"minAppVersion": "1.4.0",
 	"description": "Media-production pipeline: client \u2192 project \u2192 deliverable \u2192 shoot, with a shoot planner, a deliverable board, and integer-money estimates and invoices.",
 	"author": "SilentNinja06",
