@@ -4,7 +4,7 @@
 	"version": "0.1.1",
 	"minAppVersion": "1.4.0",
 	"description": "Media-production pipeline: client \u2192 project \u2192 deliverable \u2192 shoot, with a shoot planner, a deliverable board, and integer-money estimates and invoices.",
-	"author": "Sam Barker",
+	"author": "SilentNinja06",
 	"authorUrl": "https://github.com/SilentNinja06",
 	"isDesktopOnly": false
 }
